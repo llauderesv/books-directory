@@ -7,6 +7,7 @@ const router = express.Router();
 router.get('/', wrapAsync(booksController.getBooks));
 router.post('/', wrapAsync(booksController.createBooks));
 router.delete('/:id', wrapAsync(booksController.deleteBooks));
-router.put('/:id', wrapAsync(booksController.updateBooks))
+router.put('/:id', wrapAsync(booksController.updateBooks));
+router.post('/:id/reviews', wrapAsync(booksController.addReviews));
 
 export default router;

@@ -6,7 +6,7 @@ import mongoose, { MongooseError } from 'mongoose';
 import booksRoute from 'src/routes/booksRoute';
 import { env } from 'src/utils/envFile';
 
-(async function startServer() {
+(async function startServer(): Promise<void> {
   const app = express();
 
   const PORT = env('PORT');
