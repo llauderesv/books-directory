@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
-import bookModel from 'src/models/book.model';
+import bookModel, { IBook } from 'src/models/book.model';
 
 const validateCastToObjectId = (id: string): mongoose.Types.ObjectId => {
   id = id.trim();
@@ -8,16 +8,40 @@ const validateCastToObjectId = (id: string): mongoose.Types.ObjectId => {
   return new mongoose.Types.ObjectId(id);
 };
 
-async function getBooks(req: Request, res: Response) {
-  const books = await bookModel.find();
-
-  // Compute the number of rating in the reviews
-  for (let { reviews, rating } of books) {
-    const sumRating = reviews.reduce((acc, curr) => (curr.rating ? curr.rating + acc : 0), 0);
-    rating = sumRating / reviews.length;
+async function getBook(req: Request, res: Response) {
+  const _id = validateCastToObjectId(req.params.id);
+  const book: IBook | unknown = await bookModel.findOne({ _id });
+  if (!book) {
+    return res.json({ message: 'No found book' }).status(200);
   }
 
-  return res.json({ data: books }).status(200);
+  return res.json({ data: book }).status(200);
+}
+
+interface Book {
+  page: string;
+  limit: string;
+}
+
+async function getBooks(req: Request<{}, {}, {}, Book>, res: Response) {
+  const page = parseInt(req.query.page, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || 25;
+  const skip = (page - 1) * limit;
+  const query = {};
+
+  const books: IBook[] = await bookModel.find(query).skip(skip).limit(limit).exec();
+
+  const totalItems = await bookModel.countDocuments(query);
+  const totalPages = Math.ceil(totalItems / limit);
+
+  return res
+    .json({
+      currentPage: page,
+      totalPages,
+      totalItems,
+      items: books,
+    })
+    .status(200);
 }
 
 async function createBooks(req: Request, res: Response) {
@@ -59,4 +83,4 @@ async function addReviews(req: Request, res: Response) {
   return res.json({ message: 'Successfully added a review' });
 }
 
-export default { getBooks, createBooks, deleteBooks, updateBooks, addReviews };
+export default { getBooks, getBook, createBooks, deleteBooks, updateBooks, addReviews };

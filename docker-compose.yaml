@@ -1,0 +1,22 @@
+version: '2'
+services:
+  books-directory:
+    depends_on:
+      - my_mongodb
+    container_name: books-directory-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    ports:
+      - '8080:8080'
+    volumes:
+      - ./:/usr/src/app
+    links:
+      - my_mongodb
+  my_mongodb:
+    image: mongo:latest
+    volumes:
+      - ~/books-directory-mongodb:/data/db
+    ports:
+      - '27017:27017'

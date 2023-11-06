@@ -2,6 +2,7 @@ interface ProcessEnv {
   MONGO_DB_CONNECTION_STRING: string;
   PORT: string;
   DB_NAME: string;
+  SEEDER_ENABLED: boolean;
 }
 
 type InterfaceKeys<T> = keyof T;

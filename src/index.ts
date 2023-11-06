@@ -5,13 +5,26 @@ import morgan from 'morgan';
 import mongoose, { MongooseError } from 'mongoose';
 import booksRoute from 'src/routes/booksRoute';
 import { env } from 'src/utils/envFile';
+import seeder from './seeder';
+import bookModel from './models/book.model';
 
 (async function startServer(): Promise<void> {
   const app = express();
 
   const PORT = env('PORT');
+  const DB_NAME = env('DB_NAME');
+  const CONNECTION_STRING = env('MONGO_DB_CONNECTION_STRING');
+  mongoose.connect(CONNECTION_STRING, { dbName: DB_NAME });
 
-  mongoose.connect(env('MONGO_DB_CONNECTION_STRING'), { dbName: env('DB_NAME') });
+  if (env('SEEDER_ENABLED')) {
+    console.log(`Seeding your MongoDB database: ${DB_NAME}`);
+    const dummyData = seeder();
+
+    await bookModel.deleteMany({});
+    await bookModel.insertMany(dummyData);
+
+    console.log(`Successfully seed your MongoDB database: ${DB_NAME}`);
+  }
 
   app.use(cors());
   app.use(express.json());
