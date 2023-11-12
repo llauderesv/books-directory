@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { MongooseError } from 'mongoose';
 
 type Func = (
   req: Request<any, any, any, any>,

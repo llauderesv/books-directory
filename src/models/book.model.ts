@@ -21,9 +21,14 @@ const schema = new mongoose.Schema<IBook>(
     description: String,
     reviews: [{ user: String, text: String, rating: Number }],
   },
-  { versionKey: false, _id: false, toJSON: { virtuals: true } }
+  { versionKey: false, toJSON: { virtuals: true } }
 );
 
+/**
+ * MongoDB helper function to normalize the rating by adding it to the 
+ * body of the JSON object of book item
+ *
+ */
 schema.virtual('rating').get(function () {
   const sumRating: number = this.reviews.reduce((initialValue, currentValue) => {
     if (currentValue.rating) {

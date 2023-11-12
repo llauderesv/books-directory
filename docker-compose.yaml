@@ -1,22 +1,35 @@
 version: '2'
 services:
-  books-directory:
-    depends_on:
-      - my_mongodb
-    container_name: books-directory-web
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file: .env
-    ports:
-      - '8080:8080'
-    volumes:
-      - ./:/usr/src/app
-    links:
-      - my_mongodb
-  my_mongodb:
+  db:
+    container_name: books-directory-db
     image: mongo:latest
     volumes:
       - ~/books-directory-mongodb:/data/db
     ports:
-      - '27017:27017'
+      - 27017:27017
+    networks:
+      - my-network
+    restart: 'no'
+  books-directory:
+    depends_on:
+      - db
+    container_name: books-directory-web
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file: .env
+    environment:
+      WAIT_HOSTS: db:27017
+    ports:
+      - 8080:8080
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./node_modules:/usr/src/app/node_modules
+    links:
+      - db
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
