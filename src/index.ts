@@ -1,13 +1,20 @@
 require('dotenv').config();
-import express, { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
-import mongoose, { MongooseError } from 'mongoose';
-import booksRoute from 'src/routes/book.route';
-import userRoute from 'src/routes/user.route';
+import mongoose from 'mongoose';
 import { env } from 'src/utils/envFile';
 import seeder from './seeder';
 import bookModel from './models/book.model';
+
+// Routes
+import booksRoute from 'src/routes/book.route';
+import userRoute from 'src/routes/user.route';
+import healthCheckRoute from 'src/routes/health-check.route';
+
+// Middlewares
+import mongoError from 'src/middlewares/mongoError';
+import generalError from './middlewares/generalError';
 
 (async function startServer(): Promise<void> {
   const app = express();
@@ -33,28 +40,13 @@ import bookModel from './models/book.model';
   app.use(morgan('tiny'));
 
   // Routes
+  app.use('/api/health-check', healthCheckRoute);
   app.use('/api/v1/books', booksRoute);
   app.use('/api/v1/users', userRoute);
 
-  app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-    if (error instanceof MongooseError) {
-      return res.status(503).json({
-        type: 'MongooseError',
-        message: error.message,
-      });
-    }
-    next(error);
-  });
-
-  app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
-    if (error instanceof Error) {
-      return res.status(400).json({
-        type: 'Error',
-        message: error.message,
-      });
-    }
-    next(error);
-  });
+  // Middlewares
+  app.use(mongoError);
+  app.use(generalError);
 
   app.get('/', (req, res) => res.send('<pre>Welcome to my Books directory</pre>'));
   app.listen(PORT, () => console.log(`App is listening on localhost:${PORT}`));
