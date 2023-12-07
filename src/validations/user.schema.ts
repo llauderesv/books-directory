@@ -1,18 +1,13 @@
 import Joi from 'joi';
 import userModel from 'src/models/user.model';
 
-async function isUsernameExist(username: string) {
-  const resp = await userModel.findOne({ username });
-  if (resp) {
-    throw new Error('Username is already exists');
-  }
+interface AsyncExternalSchema {
+  username: string;
+  email: string;
 }
 
-async function isEmailExist(email: string) {
-  const resp = await userModel.findOne({ email });
-  if (resp) {
-    throw new Error('Email address is already exists');
-  }
+interface AsyncUpdateExternalSchema extends AsyncExternalSchema {
+  id: string;
 }
 
 const schema = Joi.object({
@@ -37,8 +32,40 @@ const schema = Joi.object({
   .with('password', 'repeatPassword');
 
 export const externalSchema = Joi.object({
-  username: Joi.string().external(isUsernameExist),
-  email: Joi.string().external(isEmailExist),
+  username: Joi.string(),
+  email: Joi.string(),
+}).external(async (value: AsyncExternalSchema) => {
+  const { username, email } = value;
+  const usernameResp = await userModel.findOne({ username });
+  if (usernameResp) {
+    throw new Error('Username is already exists');
+  }
+
+  const emailResp = await userModel.findOne({ email });
+  if (emailResp) {
+    throw new Error('Email address is already exists');
+  }
+});
+
+export const updateExternalSchema = Joi.object({
+  id: Joi.string(),
+  username: Joi.string(),
+  email: Joi.string(),
+}).external(async (value: AsyncUpdateExternalSchema) => {
+  const { username, email, id } = value;
+  const usernameResp = await userModel.findOne({ username, _id: { $ne: id } });
+  if (usernameResp) {
+    throw new Error('Username is already exists');
+  }
+
+  const emailResp = await userModel.findOne({ email, _id: { $ne: id } });
+  if (emailResp) {
+    throw new Error('Email is already exists');
+  }
+});
+
+export const updateUserSchema = schema.keys({
+  id: Joi.string().required(),
 });
 
 export default schema;

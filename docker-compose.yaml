@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    env_file: .env
+    env_file: ./src/config/.env.development
     environment:
       WAIT_HOSTS: db:27017
     ports:

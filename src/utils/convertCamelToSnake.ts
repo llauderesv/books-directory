@@ -1,7 +1,7 @@
-interface IQueue {
+type IQueue = {
   obj: Record<string, any>;
   target: Record<string, any>;
-}
+};
 
 export default function convertCamelToSnakeCaseKeys(obj: Record<string, any>) {
   if (obj === null || typeof obj !== 'object') {

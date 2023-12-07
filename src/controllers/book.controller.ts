@@ -1,25 +1,14 @@
 import { Request, Response } from 'express';
-import mongoose from 'mongoose';
 import bookModel, { IBook } from 'src/models/book.model';
 import convertCamelToSnakeCaseKeys from 'src/utils/convertCamelToSnake';
 import bookSchema from 'src/validations/book.schema';
+import { ApiResponse } from 'src/types/global';
+import validateCastToObjectId from 'src/utils/validateObjectId';
 
 interface Book {
   page: string;
   limit: string;
 }
-
-/**
- * Validate and cast the string object id to mongoose ID
- *
- * @param {string} id ObjectId of MongodDB
- * @returns {mongoose.Types.ObjectId} Returns the cast string id to mongoose ObjectId
- */
-const validateCastToObjectId = (id: string): mongoose.Types.ObjectId => {
-  id = id.trim();
-  if (!id || id.length <= 0) throw new Error(`Invalid book id ${id}`);
-  return new mongoose.Types.ObjectId(id);
-};
 
 /**
  * Get a single book item
@@ -28,7 +17,7 @@ const validateCastToObjectId = (id: string): mongoose.Types.ObjectId => {
  * @param {Response} res Express.Response
  * @returns {Object} Returns Book details
  */
-async function getBook(req: Request, res: Response): Return {
+async function getBook(req: Request, res: Response): ApiResponse {
   const _id = validateCastToObjectId(req.params.id);
   const book: IBook | unknown = await bookModel.findOne({ _id });
   if (!book) {
@@ -46,7 +35,7 @@ async function getBook(req: Request, res: Response): Return {
  * @param {Response} res Express.Response
  * @returns {Array<Object>} JSON list of book items
  */
-async function getBooks(req: Request<{}, {}, {}, Book>, res: Response): Return {
+async function getBooks(req: Request<{}, {}, {}, Book>, res: Response): ApiResponse {
   const page = parseInt(req.query.page, 10) || 1;
   const limit = parseInt(req.query.limit, 10) || 25;
   const skip = (page - 1) * limit;
@@ -75,7 +64,7 @@ async function getBooks(req: Request<{}, {}, {}, Book>, res: Response): Return {
  *
  * @returns {Object} Returns the created Book
  */
-async function createBooks(req: Request, res: Response): Return {
+async function createBooks(req: Request, res: Response): ApiResponse {
   const body = req.body;
   const resp = bookSchema.validate(body);
   if (resp.error) {
@@ -96,7 +85,7 @@ async function createBooks(req: Request, res: Response): Return {
  * @param {Response} res Express Response
  * @returns {Object} Returns a successful message when successfully deleted the Book
  */
-async function deleteBooks(req: Request, res: Response): Return {
+async function deleteBooks(req: Request, res: Response): ApiResponse {
   const _id = validateCastToObjectId(req.params.id);
 
   const book = await bookModel.findOne({ _id }).exec();
@@ -114,7 +103,7 @@ async function deleteBooks(req: Request, res: Response): Return {
  * @param {Response} res Express Response
  * @returns {Object} Returns the updated Book
  */
-async function updateBooks(req: Request, res: Response): Return {
+async function updateBooks(req: Request, res: Response): ApiResponse {
   const _id = validateCastToObjectId(req.params.id);
   const body = req.body;
 
@@ -128,7 +117,7 @@ async function updateBooks(req: Request, res: Response): Return {
  * @param {Response} res Express Response
  * @returns {String} Returns successful message when successfully added a review
  */
-async function addReviews(req: Request, res: Response): Return {
+async function addReviews(req: Request, res: Response): ApiResponse {
   const _id = validateCastToObjectId(req.params.id);
   const book = await bookModel.findOne({ _id });
   if (!book) {
