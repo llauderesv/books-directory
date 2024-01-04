@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
 
+type Reviews = {
+  user: string;
+  text: string;
+  rating: number;
+};
+
 interface IBook {
   title: string;
   author: string;
@@ -8,7 +14,7 @@ interface IBook {
   genre: string[];
   description: string;
   rating?: number;
-  reviews: { user: string; text: string; rating: number }[];
+  reviews: Reviews[];
 }
 
 const schema = new mongoose.Schema<IBook>(
@@ -25,7 +31,7 @@ const schema = new mongoose.Schema<IBook>(
 );
 
 /**
- * MongoDB helper function to normalize the rating by adding it to the 
+ * MongoDB helper function to normalize the rating by adding it to the
  * body of the JSON object of book item
  *
  */

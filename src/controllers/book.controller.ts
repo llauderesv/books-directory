@@ -4,11 +4,15 @@ import convertCamelToSnakeCaseKeys from 'src/utils/convertCamelToSnake';
 import bookSchema from 'src/validations/book.schema';
 import { ApiResponse } from 'src/types/global';
 import validateCastToObjectId from 'src/utils/validateObjectId';
+import BookRepository from 'src/repositories/books.repository';
+import { PaginatedResult, PaginationParams } from 'src/repositories/IRepository';
 
 interface Book {
   page: string;
   limit: string;
 }
+
+const bookRepository = new BookRepository();
 
 /**
  * Get a single book item
@@ -18,8 +22,8 @@ interface Book {
  * @returns {Object} Returns Book details
  */
 async function getBook(req: Request, res: Response): ApiResponse {
-  const _id = validateCastToObjectId(req.params.id);
-  const book: IBook | unknown = await bookModel.findOne({ _id });
+  const id = validateCastToObjectId(req.params.id);
+  const book = await bookRepository.getById(id);
   if (!book) {
     return res.status(404).json({ message: 'No found Book' });
   }
@@ -41,19 +45,12 @@ async function getBooks(req: Request<{}, {}, {}, Book>, res: Response): ApiRespo
   const skip = (page - 1) * limit;
   const query = {};
 
-  const books: IBook[] = await bookModel.find(query).skip(skip).limit(limit).exec();
+  const pagination: PaginationParams = { page, limit, skip, query };
+  const paginatedResult: PaginatedResult<IBook> | null = await bookRepository.getPaginated(
+    pagination
+  );
 
-  const totalItems = await bookModel.countDocuments(query);
-  const totalPages = Math.ceil(totalItems / limit);
-
-  return res
-    .json({
-      currentPage: page,
-      totalPages,
-      totalItems,
-      items: books,
-    })
-    .status(200);
+  return res.json(paginatedResult).status(200);
 }
 
 /**
@@ -88,12 +85,10 @@ async function createBooks(req: Request, res: Response): ApiResponse {
 async function deleteBooks(req: Request, res: Response): ApiResponse {
   const _id = validateCastToObjectId(req.params.id);
 
-  const book = await bookModel.findOne({ _id }).exec();
+  const book = await bookModel.findOneAndDelete({ _id }).exec();
   if (!book) {
     throw new Error(`Can't find book with ${_id}`);
   }
-
-  await bookModel.deleteOne({ _id });
   return res.json({ message: 'Successfully deleted the record' });
 }
 
@@ -107,7 +102,10 @@ async function updateBooks(req: Request, res: Response): ApiResponse {
   const _id = validateCastToObjectId(req.params.id);
   const body = req.body;
 
-  await bookModel.updateOne({ _id }, { ...body });
+  const book = await bookModel.findOneAndUpdate({ _id }, body).exec();
+  if (!book) {
+    throw new Error(`Can't find book with ${_id}`);
+  }
   return res.json({ message: 'Successfully updated the record' });
 }
 

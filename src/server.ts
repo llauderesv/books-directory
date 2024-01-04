@@ -24,7 +24,7 @@ import loadConfig from './config/config';
   const DB_NAME = config.DB_NAME;
   mongoose.connect(config.MONGO_DB_CONNECTION_STRING, { dbName: DB_NAME });
 
-  if (!!config.SEEDER_ENABLED) {
+  if (!config.SEEDER_ENABLED) {
     console.log(`Seeding your MongoDB database: ${DB_NAME}`);
     const dummyData = seeder();
 
