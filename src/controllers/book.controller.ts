@@ -6,13 +6,18 @@ import { ApiResponse } from 'src/types/global';
 import validateCastToObjectId from 'src/utils/validateObjectId';
 import BookRepository from 'src/repositories/books.repository';
 import { PaginatedResult, PaginationParams } from 'src/repositories/IRepository';
+import logger from 'src/utils/logger';
 
 interface Book {
   page: string;
   limit: string;
 }
 
-const bookRepository = new BookRepository();
+// Create Logger Instance
+const log = logger.child({ module: 'books-controller', pid: process.pid });
+
+// Pass the child logger to BooksRepository for later use.
+const bookRepository = new BookRepository(log);
 
 /**
  * Get a single book item
@@ -22,9 +27,11 @@ const bookRepository = new BookRepository();
  * @returns {Object} Returns Book details
  */
 async function getBook(req: Request, res: Response): ApiResponse {
+  log.info('Get Book Info');
   const id = validateCastToObjectId(req.params.id);
   const book = await bookRepository.getById(id);
   if (!book) {
+    log.info(`No found Book ${id}`);
     return res.status(404).json({ message: 'No found Book' });
   }
 

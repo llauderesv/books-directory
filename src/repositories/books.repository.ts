@@ -3,12 +3,15 @@ import { Types } from 'mongoose';
 import bookModel, { IBook } from 'src/models/book.model';
 import IRepository, { PaginatedResult, PaginationParams } from './IRepository';
 import loadConfig, { ProcessEnv } from 'src/config/config';
+import { Logger } from 'winston';
 
 export default class BookRepository implements IRepository<IBook> {
-  private readonly Config: ProcessEnv;
+  private readonly config: ProcessEnv;
+  private readonly logger: Logger;
 
-  constructor() {
-    this.Config = loadConfig();
+  constructor(logger: Logger) {
+    this.config = loadConfig();
+    this.logger = logger.child({ module: 'books-repository' });
   }
 
   async getPaginated(pagination: PaginationParams): Promise<PaginatedResult<IBook> | null> {
@@ -29,8 +32,9 @@ export default class BookRepository implements IRepository<IBook> {
   }
 
   async initializeCache() {
+    this.logger.info('Connecting to cache...');
     const client = await createClient({
-      url: `redis://${this.Config.REDIS_URL}:${this.Config.REDIS_PORT}`,
+      url: `redis://${this.config.REDIS_URL}:${this.config.REDIS_PORT}`,
     })
       .on('error', err => console.log(`Error: ${err}`))
       .connect();
@@ -48,13 +52,13 @@ export default class BookRepository implements IRepository<IBook> {
     const bookCache = (await client.json.GET(key)) as string | null;
 
     if (bookCache) {
-      console.log(`Retrieving data from Cache`, bookCache);
+      this.logger.info(`Retrieving data from Cache`, bookCache);
       return JSON.parse(bookCache) as IBook | null;
     } else {
-      console.log('Not found in the cache');
+      this.logger.info('Not found in the cache');
       const book: IBook | null = await bookModel.findOne({ _id: id });
       if (!book) {
-        console.log(`No book found ${id}`);
+        this.logger.info(`No book found ${id}`);
         return null;
       }
 
