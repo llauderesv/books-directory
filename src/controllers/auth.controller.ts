@@ -1,11 +1,9 @@
 import { Request, Response } from 'express';
 import axios from 'axios';
-import loadConfig from 'src/config/config';
+import { config } from '../ioc';
 
 // Types for retuning Express Response to API Controllers
 type Return = Promise<Response<any, Record<string, any>>>;
-
-const config = loadConfig();
 
 async function getAccessToken(req: Request, res: Response): Return {
   const postData = {

@@ -4,9 +4,9 @@ import convertCamelToSnakeCaseKeys from 'src/utils/convertCamelToSnake';
 import bookSchema from 'src/validations/book.schema';
 import { ApiResponse } from 'src/types/global';
 import validateCastToObjectId from 'src/utils/validateObjectId';
-import BookRepository from 'src/repositories/books.repository';
+import { bookRepository, googleBooksApi, logger } from 'src/ioc';
 import { PaginatedResult, PaginationParams } from 'src/repositories/IRepository';
-import logger from 'src/utils/logger';
+import { BooksParams } from 'src/services/googleBooksApi';
 
 interface Book {
   page: string;
@@ -14,10 +14,29 @@ interface Book {
 }
 
 // Create Logger Instance
-const log = logger.child({ module: 'books-controller', pid: process.pid });
+const log = logger.getLogger().child({ module: 'books-controller', pid: process.pid });
 
-// Pass the child logger to BooksRepository for later use.
-const bookRepository = new BookRepository(log);
+async function getGoogleBook(req: Request, res: Response): ApiResponse {
+  const bookId = req.params.id;
+  const resp = await googleBooksApi.getBookDetails(bookId);
+  if (resp) {
+    return res.status(200).json(resp);
+  }
+  return res.status(200).json({ message: 'No book found' });
+}
+
+async function getGoogleBooks(
+  req: Request<{}, {}, {}, BooksParams>,
+  res: Response
+): ApiResponse {
+  const booksParam = req.query;
+  const resp = await googleBooksApi.getBooks(booksParam);
+  if (resp) {
+    console.log('Total fetched items: ', resp.items?.length);
+    return res.status(200).json(resp);
+  }
+  return res.status(200).json({ message: 'No books found' });
+}
 
 /**
  * Get a single book item
@@ -27,7 +46,7 @@ const bookRepository = new BookRepository(log);
  * @returns {Object} Returns Book details
  */
 async function getBook(req: Request, res: Response): ApiResponse {
-  log.info('Get Book Info');
+  log.info('Get Book Infos');
   const id = validateCastToObjectId(req.params.id);
   const book = await bookRepository.getById(id);
   if (!book) {
@@ -134,4 +153,13 @@ async function addReviews(req: Request, res: Response): ApiResponse {
   return res.json({ message: 'Successfully added a review' });
 }
 
-export default { getBooks, getBook, createBooks, deleteBooks, updateBooks, addReviews };
+export default {
+  getBooks,
+  getBook,
+  createBooks,
+  deleteBooks,
+  updateBooks,
+  addReviews,
+  getGoogleBook,
+  getGoogleBooks,
+};

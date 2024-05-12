@@ -2,16 +2,27 @@ import { createClient } from 'redis';
 import { Types } from 'mongoose';
 import bookModel, { IBook } from 'src/models/book.model';
 import IRepository, { PaginatedResult, PaginationParams } from './IRepository';
-import loadConfig, { ProcessEnv } from 'src/config/config';
+import { inject, injectable } from 'inversify';
+import { IConfig } from '../config';
+import { TYPES } from '../ioc/types';
+import { LoggerService } from 'src/services/logger.service';
 import { Logger } from 'winston';
 
-export default class BookRepository implements IRepository<IBook> {
-  private readonly config: ProcessEnv;
+export interface IBookRepository extends IRepository<IBook> {
+  initializeCache(): Promise<any>;
+}
+
+@injectable()
+class BookRepository implements IBookRepository {
+  private readonly config: IConfig;
   private readonly logger: Logger;
 
-  constructor(logger: Logger) {
-    this.config = loadConfig();
-    this.logger = logger.child({ module: 'books-repository' });
+  constructor(
+    @inject(TYPES.Config) config: IConfig,
+    @inject(TYPES.LoggerService) logger: LoggerService
+  ) {
+    this.config = config;
+    this.logger = logger.getLogger().child({ module: 'books-repository' });
   }
 
   async getPaginated(pagination: PaginationParams): Promise<PaginatedResult<IBook> | null> {
@@ -31,14 +42,13 @@ export default class BookRepository implements IRepository<IBook> {
     };
   }
 
-  async initializeCache() {
+  async initializeCache(): Promise<any> {
     this.logger.info('Connecting to cache...');
     const client = await createClient({
       url: `redis://${this.config.REDIS_URL}:${this.config.REDIS_PORT}`,
     })
       .on('error', err => console.log(`Error: ${err}`))
       .connect();
-
     return client;
   }
 
@@ -53,7 +63,8 @@ export default class BookRepository implements IRepository<IBook> {
 
     if (bookCache) {
       this.logger.info(`Retrieving data from Cache`, bookCache);
-      return JSON.parse(bookCache) as IBook | null;
+      const parseBook: IBook = JSON.parse(bookCache);
+      return parseBook;
     } else {
       this.logger.info('Not found in the cache');
       const book: IBook | null = await bookModel.findOne({ _id: id });
@@ -76,3 +87,5 @@ export default class BookRepository implements IRepository<IBook> {
     throw new Error('Method not implemented.');
   }
 }
+
+export default BookRepository;

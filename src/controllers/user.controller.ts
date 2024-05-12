@@ -16,7 +16,7 @@ import validateCastToObjectId from 'src/utils/validateObjectId';
  * @param {Response} res Express Response
  * @returns {Object} Returns the searched User
  */
-async function getUsers(req: Request, res: Response) {
+async function getUsers(req: Request, res: Response): ApiResponse {
   const id = req.params.id;
   const _id = validateCastToObjectId(id);
 

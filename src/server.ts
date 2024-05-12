@@ -14,11 +14,10 @@ import healthCheckRoute from 'src/routes/health-check.route';
 // Middlewares
 import mongoError from 'src/middlewares/mongoError';
 import generalError from './middlewares/generalError';
-import loadConfig from './config/config';
+import { config } from 'src/ioc';
 
 (async function startServer(): Promise<void> {
   const app = express();
-  const config = loadConfig();
 
   const PORT = config.PORT;
   const DB_NAME = config.DB_NAME;

@@ -4,7 +4,7 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "start:dev": "ts-node-dev --respawn -r tsconfig-paths/register src/index.ts",
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js"
@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@googleapis/books": "^1.0.5",
     "ajv": "^8.12.0",
     "ajv-errors": "^3.0.0",
     "ajv-formats": "^2.1.1",
@@ -22,23 +23,29 @@
     "express": "^4.18.2",
     "express-jwt": "^8.4.1",
     "express-oauth2-jwt-bearer": "^1.6.0",
+    "inversify": "^6.0.2",
     "joi": "^17.11.0",
     "jwks-rsa": "^3.1.0",
     "mongoose": "^7.4.3",
     "morgan": "^1.10.0",
     "redis": "^4.6.12",
+    "reflect-metadata": "^0.2.1",
+    "ts-jest": "^29.1.2",
     "winston": "^3.11.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.13",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.11",
     "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.4",
+    "@types/node": "^20.12.11",
+    "jest": "^29.7.0",
     "nodemon": "^3.0.1",
     "ts-node-dev": "^2.0.0",
     "tsc-alias": "^1.8.8",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.4.5"
   }
 }

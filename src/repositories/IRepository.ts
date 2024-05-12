@@ -22,3 +22,19 @@ export default interface IRepository<T> {
   update(id: string | Types.ObjectId, item: T): Promise<T | null>;
   delete(id: string | Types.ObjectId): Promise<boolean>;
 }
+
+type Promisify<T> = {
+  [P in keyof T]: T[P];
+};
+
+interface User {
+  name: string;
+}
+
+function getUserFromDB(): Promisify<User> {
+  return {
+    name: 'Vince Llauderes',
+  } as User;
+}
+
+const user = getUserFromDB();

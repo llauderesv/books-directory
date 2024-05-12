@@ -1,8 +1,6 @@
-import loadConfig from 'src/config/config';
 import { expressjwt as jwt } from 'express-jwt';
+import { config } from 'src/ioc';
 const jwksRsa = require('jwks-rsa');
-
-const config = loadConfig();
 
 // Middleware to check for valid JWT
 const checkJwt = jwt({
